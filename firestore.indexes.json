@@ -1,0 +1,47 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "emprunts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "estRendu",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "dateRetourPrevue",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "livres",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "categorie",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "estDisponible",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "journal",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

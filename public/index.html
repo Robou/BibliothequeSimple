@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Biiiibliothèque Club Alpin</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css">
+  <!-- CSS personnalisé -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Firebase App (la base de Firebase) -->
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <!-- Firebase Auth -->
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <!-- Firebase Firestore -->
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <!-- Firebase Functions -->
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header text-center">
+      <h1><i class="fas fa-mountain"></i> Bibliothèque Club Alpin</h1>
+      <p class="lead">Consultez et empruntez les ouvrages de montagne</p>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button"
+          role="tab" aria-controls="home" aria-selected="true">
+          <i class="fas fa-book"></i> Catalogue
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="borrow-tab" data-bs-toggle="tab" data-bs-target="#borrow" type="button" role="tab"
+          aria-controls="borrow" aria-selected="false">
+          <i class="fas fa-hand-holding"></i> Emprunter
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="return-tab" data-bs-toggle="tab" data-bs-target="#return" type="button" role="tab"
+          aria-controls="return" aria-selected="false">
+          <i class="fas fa-undo"></i> Retourner
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin" type="button" role="tab"
+          aria-controls="admin" aria-selected="false">
+          <i class="fas fa-lock"></i> Admin
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+      <!-- Onglet Catalogue -->
+      <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-md-6">
+                <div class="input-group">
+                  <input type="text" id="searchInput" class="form-control" placeholder="Rechercher un livre...">
+                  <button class="btn btn-primary" id="searchButton">
+                    <i class="fas fa-search"></i> Rechercher
+                  </button>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <select class="form-select" id="categoryFilter">
+                  <option value="">Toutes les catégories</option>
+                  <!-- Les catégories seront ajoutées dynamiquement -->
+                </select>
+              </div>
+              <div class="col-md-3">
+                <select class="form-select" id="availabilityFilter">
+                  <option value="">Tous les livres</option>
+                  <option value="true">Disponibles uniquement</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="booksContainer" class="row">
+          <!-- Les livres seront ajoutés dynamiquement ici -->
+          <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Chargement...</span>
+            </div>
+            <p>Chargement des livres...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglet Emprunter -->
+      <div class="tab-pane fade" id="borrow" role="tabpanel" aria-labelledby="borrow-tab">
+        <div class="card">
+          <div class="card-header">
+            <h5><i class="fas fa-hand-holding"></i> Emprunter un livre</h5>
+          </div>
+          <div class="card-body">
+            <form id="borrowForm">
+              <div class="mb-3">
+                <label class="form-label">Sélection du livre</label>
+                <div class="card mb-3">
+                  <div class="card-body bg-light">
+                    <div class="mb-3">
+                      <label for="isbnInput" class="form-label">
+                        <i class="fas fa-barcode"></i> Scanner un code-barres (ISBN)
+                      </label>
+                      <div class="input-group">
+                        <input type="text" class="form-control" id="isbnInput" placeholder="Scannez ou saisissez un ISBN">
+                        <button class="btn btn-outline-primary" type="button" id="isbnSearchButton">
+                          <i class="fas fa-search"></i>
+                        </button>
+                      </div>
+                      <div class="form-text">Scannez le code-barres du livre ou saisissez manuellement son ISBN</div>
+                    </div>
+                    <div class="text-center">
+                      <span class="text-muted">- ou -</span>
+                    </div>
+                    <div class="mb-0">
+                      <label for="bookSelect" class="form-label">
+                        <i class="fas fa-list"></i> Sélectionner dans la liste
+                      </label>
+                      <select class="form-select" id="bookSelect">
+                        <option value="">Sélectionnez un livre</option>
+                        <!-- Les livres disponibles seront ajoutés dynamiquement -->
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div id="selectedBookInfo" class="mb-3 d-none">
+                <div class="card border-primary">
+                  <div class="card-header bg-primary text-white">Livre sélectionné</div>
+                  <div class="card-body" id="selectedBookDetails">
+                    <!-- Les détails du livre sélectionné seront affichés ici -->
+                  </div>
+                </div>
+              </div>
+              <input type="hidden" id="selectedBookId" name="selectedBookId" required>
+              <div class="mb-3">
+                <label for="borrowerName" class="form-label">Votre nom</label>
+                <input type="text" class="form-control" id="borrowerName" required>
+              </div>
+              <div class="mb-3">
+                <label for="borrowerContact" class="form-label">Votre contact (email ou téléphone)</label>
+                <input type="text" class="form-control" id="borrowerContact" required>
+              </div>
+              <div class="mb-3">
+                <label for="borrowComments" class="form-label">Commentaires (optionnel)</label>
+                <textarea class="form-control" id="borrowComments" rows="2"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check-circle"></i> Confirmer l'emprunt
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglet Retourner -->
+      <div class="tab-pane fade" id="return" role="tabpanel" aria-labelledby="return-tab">
+        <div class="card">
+          <div class="card-header">
+            <h5><i class="fas fa-undo"></i> Retourner un livre</h5>
+          </div>
+          <div class="card-body">
+            <form id="returnForm">
+              <div class="mb-3">
+                <label for="borrowSelect" class="form-label">Livre à retourner</label>
+                <select class="form-select" id="borrowSelect" required>
+                  <option value="">Sélectionnez un emprunt à retourner</option>
+                  <!-- Les emprunts actifs seront ajoutés dynamiquement -->
+                </select>
+              </div>
+              <button type="submit" class="btn btn-success">
+                <i class="fas fa-check-circle"></i> Confirmer le retour
+              </button>
+            </form>
+
+            <div class="mt-4">
+              <h6>Emprunts actifs</h6>
+              <div id="activeBorrowsContainer">
+                <!-- Liste des emprunts actifs -->
+                <div class="text-center">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                  </div>
+                  <p>Chargement des emprunts...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglet Admin -->
+      <div class="tab-pane fade" id="admin" role="tabpanel" aria-labelledby="admin-tab">
+        <div class="card">
+          <div class="card-header">
+            <h5><i class="fas fa-lock"></i> Administration</h5>
+          </div>
+          <div class="card-body">
+            <div id="adminLoginForm">
+              <div class="mb-3">
+                <label for="adminEmail" class="form-label">Email administrateur</label>
+                <input type="email" class="form-control" id="adminEmail">
+              </div>
+              <div class="mb-3">
+                <label for="adminPassword" class="form-label">Mot de passe administrateur</label>
+                <input type="password" class="form-control" id="adminPassword">
+              </div>
+              <button id="adminLoginButton" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt"></i> Se connecter
+              </button>
+            </div>
+
+            <div id="adminContent" style="display: none;">
+              <ul class="nav nav-pills mb-3" id="adminTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="add-book-tab" data-bs-toggle="pill" data-bs-target="#add-book"
+                    type="button" role="tab" aria-controls="add-book" aria-selected="true">Ajouter un livre</button>
+                </li>
+              </ul>
+
+              <div class="tab-content" id="adminTabContent">
+                <div class="tab-pane fade show active" id="add-book" role="tabpanel" aria-labelledby="add-book-tab">
+                  <form id="addBookForm">
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="bookTitle" class="form-label">Titre</label>
+                        <input type="text" class="form-control" id="bookTitle" required>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="bookAuthor" class="form-label">Auteur</label>
+                        <input type="text" class="form-control" id="bookAuthor" required>
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-4 mb-3">
+                        <label for="bookYear" class="form-label">Année</label>
+                        <input type="number" class="form-control" id="bookYear" required min="1900" max="2100">
+                      </div>
+                      <div class="col-md-4 mb-3">
+                        <label for="bookCategory" class="form-label">Catégorie</label>
+                        <select class="form-select" id="bookCategory" required>
+                          <!-- Les catégories seront chargées dynamiquement -->
+                        </select>
+                      </div>
+                      <div class="col-md-4 mb-3">
+                        <label for="bookEditor" class="form-label">Éditeur</label>
+                        <input type="text" class="form-control" id="bookEditor">
+                      </div>
+                    </div>
+
+                    <div class="mb-3">
+                      <label for="bookDescription" class="form-label">Description</label>
+                      <textarea class="form-control" id="bookDescription" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                      <label for="bookKeywords" class="form-label">Mots-clés (séparés par des virgules)</label>
+                      <input type="text" class="form-control" id="bookKeywords">
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-3 mb-3">
+                        <label for="bookIsbn" class="form-label">N° ISBN</label>
+                        <input type="text" class="form-control" id="bookIsbn">
+                      </div>
+                      <div class="col-md-3 mb-3">
+                        <label for="bookType" class="form-label">Type physique</label>
+                        <select class="form-select" id="bookType">
+                          <option>Livre</option>
+                          <option>Carte</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="bookLocation" class="form-label">Lieu de stockage</label>
+                        <input type="text" class="form-control" id="bookLocation" placeholder="ex: A3 (n° de caisse)">
+                      </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                      <i class="fas fa-plus-circle"></i> Ajouter le livre
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages d'alerte -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="appToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="me-auto" id="toastTitle">Notification</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" id="toastMessage">
+        Message ici
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-5">
+    <div class="container text-center">
+      <p><i class="fas fa-mountain"></i> Club Alpin d'Avignon et Vaucluse</p>
+    </div>
+  </footer>
+
+  <!-- Scripts JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Scripts de l'application -->
+  <script defer src="js/firebaseConfig.js"></script>
+  <script src="js/models/appState.js"></script>
+  <script src="js/views/uiManager.js"></script>
+  <script src="js/services/firebaseService.js"></script>
+  <script src="js/controllers/appController.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
